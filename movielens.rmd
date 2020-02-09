@@ -1,5 +1,5 @@
 ---
-title: "Movielens Capstone project report"
+title: "MovieLens Capstone project report"
 author: "Harald Lie"
 date: "2020-Feb-09"
 output: pdf_document
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## 1. Introduction
-This report describes the Movielens project that is one of two projects required for the last course in the "Professional Certificate in Data Science" programme at Harvard University. MovieLens is a research site run by GroupLens Research at the University of Minnesota. MovieLens users rate movies they have seen. Based on their ratings, the users receive personalized predictions for other movies.  
+This report describes the MovieLens project that is one of two projects required for the last course in the "Professional Certificate in Data Science" programme at Harvard University. MovieLens is a research site run by GroupLens Research at the University of Minnesota. MovieLens users rate movies they have seen. Based on their ratings, the users receive personalized predictions for other movies.  
 GroupLens Research makes several datasets available for research purposes. The dataset that I have used for this project, the MovieLens 10M Dataset[^1], is one of these. It includes more than 10 million movie ratings and 95,580 tags applied to 10,681 movies by 71,567 MovieLens users. The dataset was released in 2009.  
 The project objective is to develop a model for high-quality movie predictions and to document the results, the process and techniques used in this report. The final model that I submit in this report, the "Movie + user with regularization" model, has an Root-mean-square deviation (RMSE) of 0.8648170 which meets the requirement for the highest score on the RMSE-part of the project.
 
@@ -517,9 +517,10 @@ reg2_rmse_val <- sapply(lambdas, function(lambda) {
 reg2_rmse_val <- min(reg2_rmse_val)
 ```
 
-And the RMSE is `r reg2_rmse_val`. This meets the requirement for the highest score on the RMSE-part of the project.
+And the RMSE is `r reg2_rmse_val`.  
 
-## 5. RMSE - comparison table
+
+## 5. RMSE comparison table and conclusion
 
 The table below summarizes the RMSE results from the various models applied to the edx test set that I made and the validation datatset that was provided by the course instructors.
 ```{r table, include=FALSE}
@@ -531,25 +532,25 @@ rmse_results <- tibble(Method = "Just the average",
 
 # Add results - movie effect
 rmse_results <- add_row(rmse_results, 
-                        method = "Movie effect", 
+                        Method = "Movie effect", 
                         RMSE_edx = rmse2_edx, 
                         RMSE_validation = rmse2_val)
 
 # Add results - movie + user effects
 rmse_results <- add_row(rmse_results, 
-                        method = "User effect", 
+                        Method = "User effect", 
                         RMSE_edx = rmse3_edx, 
                         RMSE_validation = rmse3_val)
 
 # Add results - movie w/regularization
 rmse_results <- add_row(rmse_results, 
-                        method = "Movie w/ regularization", 
+                        Method = "Movie w/ regularization", 
                         RMSE_edx = reg1_rmse_edx, 
                         RMSE_validation = reg1_rmse_val)
 
 # Add results - movie + user w/regularization
 rmse_results <- add_row(rmse_results, 
-                        method = "Movie + user w/ regularization", 
+                        Method = "Movie + user w/ regularization", 
                         RMSE_edx = reg2_rmse_edx, 
                         RMSE_validation = reg2_rmse_val)
 ```
@@ -558,8 +559,10 @@ rmse_results <- add_row(rmse_results,
 kable(rmse_results, caption = "RMSE results")
 ```
 
-
-
+In conclusion, this report has described my work with the movie prediction model. I have documented how I wrangled the data, explored the data, and made models using both the edx dataset and also with the final validation set.  
+But is the project objective - to develop a model for high-quality move predictions - met? In my view, no. The final model has an RMSE of less than 0.86490 which is good enough to qualify for best grade according to the MovieLens grading rubric. But I would personally be disappointed with a prediction service that was on average almost 0.9 stars off.  
+The model inclusion of other variables in the dataset, such as genre and time of rating, could reduce the RMSE slightly. But in order to make signifiant model improvements I think it is necessary to have a wider dataset with more information about the movies and users. For example, I really like the actor Matthew McConaughey, movies from the interwar period, and movies about France. Oh - and I normally enjoy movies more in the movie theater than at home. This is information that would help improve the prediction for my personal movie ratings, but it is also information that is not available in the MovieLens dataset and that limits the analysis.  
+For future work, it would be valuable to include more independent variables in the analysis. Also, it would be interesting to see whether other modeling methods - such as those found in R's Caret package, could improve the model quality. In the next project, the "Choose your own" project, I will use the Caret package to compare different modeling techniques.
 
 
 

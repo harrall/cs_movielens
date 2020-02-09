@@ -86,8 +86,6 @@ rm(dl, ratings, movies, test_index, temp, movielens, removed)
 # Data exploration
 ################################
 
-# TODO: double graph with movies and users from 33.7.1 Movielens data
-
 ## Histogram - no of ratings for the movies
 sum_movie <- edx %>% 
   group_by(movieId) %>%
@@ -477,28 +475,24 @@ rm(rmse_results)
 rmse_results <- tibble(method = "Just the average", 
                        RMSE_edx = rmse1_edx, 
                        RMSE_validation = rmse1_val)
-rmse_results
 
 # Add results - movie effect
 rmse_results <- add_row(rmse_results, 
                         method = "Movie effect", 
                         RMSE_edx = rmse2_edx, 
                         RMSE_validation = rmse2_val)
-rmse_results
 
 # Add results - movie + user effects
 rmse_results <- add_row(rmse_results, 
                         method = "User effect", 
                         RMSE_edx = rmse3_edx, 
                         RMSE_validation = rmse3_val)
-rmse_results
 
 # Add results - movie w/regularization
 rmse_results <- add_row(rmse_results, 
                         method = "Movie w/ regularization", 
                         RMSE_edx = reg1_rmse_edx, 
                         RMSE_validation = reg1_rmse_val)
-rmse_results
 
 # Add results - movie + user w/regularization
 rmse_results <- add_row(rmse_results, 
