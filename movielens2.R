@@ -335,9 +335,9 @@ reg2_rmse_edx <- min(reg2_rmse_edx)
 reg2_rmse_edx
 
 
-######### Part 4 ####################
-# Modeling and RMSE - final run 
-#####################################
+######### Part 4 #######################################
+# Modeling and RMSE - final run on validation data set
+########################################################
 
 
 ### Define the loss function (RSME) - similar to std deviation: The typical error when making a prediction
@@ -346,95 +346,11 @@ RMSE <- function(true_ratings, predicted_ratings){
   sqrt(mean((true_ratings - predicted_ratings)^2))
 }
 
-### A first model - just the average rating for all movies
-# Yui=μ+εu,i where u is the "true rating" and εu,i are the errors centered at 0
-
 # Calculate the average rating for all movies in the train set
 mu_val <- mean(edx$rating) 
 
-## Run on validation set
-rmse1_val <- RMSE(validation$rating, mu_val)
-rmse1_val
-
-### Include Movie effects
-# We know there is high variability between movies
-# Yui=μ+bi+εu,i where bi is the average rating for movie i
-
-## Validation set
-mu_val <- mean(edx$rating) 
-avgs_movie_val <- edx %>% 
-  group_by(movieId) %>% 
-  summarize(b_i = mean(rating - mu_val))
-
-pred_movie <- validation %>% 
-  left_join(avgs_movie_val, by='movieId') %>%
-  mutate(movie_pred = mu_val + b_i) %>%
-  pull(movie_pred)
-
-rmse2_val <- RMSE(validation$rating, pred_movie)
-rmse2_val
-
-### Add user effects
-# We know there is high variability between movies
-# Yui=μ+bi+bu+εu,i where bu is the user-specific effect
-
-## Validation data set
-mu_val <- mean(edx$rating)
-avgs_user_val <- edx %>% 
-  left_join(avgs_movie_val, by='movieId') %>%
-  group_by(userId) %>%
-  summarize(b_u = mean(rating - mu_val - b_i))
-
-pred_user <- validation %>% 
-  left_join(avgs_movie_val, by='movieId') %>%
-  left_join(avgs_user_val, by='userId') %>%
-  mutate(pred = mu_val + b_i + b_u) %>%
-  pull(pred)
-
-# calculate RMSE
-rmse3_val <- RMSE(validation$rating, pred_user)
-rmse3_val
-
-# We're now down to an RMSE of lower than 0.87. 
-
-#### Include regularization - movie effects
-### Validation set
-
 # Lambdas table
 lambdas <- seq(0, 8, 0.1)
-# Use sapply to calculate RMSE with various Lambdas
-reg1_rmse_val <- sapply(lambdas, function(lambda) {
-  
-  # Calculate the average per movie
-  b_i <- edx %>%
-    group_by(movieId) %>%
-    summarize(b_i = sum(rating - mu_val) / (n() + lambda))
-  
-  # Predict rating and apply to validation set
-  predicted_ratings <- validation %>%
-    left_join(b_i, by='movieId') %>%
-    mutate(pred = mu_val + b_i) %>%
-    pull(pred)
-  
-  # Predict the RMSE on the validation set
-  return(RMSE(validation$rating, predicted_ratings))
-})
-
-# Plot the lambdas graph
-lambda_plot2 <- data.frame(RMSE = reg1_rmse_val, lambdas = lambdas) %>%
-  ggplot(aes(lambdas, reg1_rmse_val)) +
-  geom_point(colour = "#993366") +
-  labs(y = "RMSE",x = "Lambda") +
-  theme_light()
-
-lambda_plot2
-
-# Get the lambda value that minimize the RMSE
-min_lambda <- lambdas[which.min(reg1_rmse_val)]
-min_lambda
-# Predict the RMSE on the validation set
-reg1_rmse_val <- min(reg1_rmse_val)
-reg1_rmse_val
 
 #### Regularization with movie and user effects
 ### Validation set
@@ -474,25 +390,25 @@ reg2_rmse_val
 rm(rmse_results)
 rmse_results <- tibble(method = "Just the average", 
                        RMSE_edx = rmse1_edx, 
-                       RMSE_validation = rmse1_val)
+                       RMSE_validation = " ")
 
 # Add results - movie effect
 rmse_results <- add_row(rmse_results, 
                         method = "Movie effect", 
                         RMSE_edx = rmse2_edx, 
-                        RMSE_validation = rmse2_val)
+                        RMSE_validation = " ")
 
 # Add results - movie + user effects
 rmse_results <- add_row(rmse_results, 
                         method = "User effect", 
                         RMSE_edx = rmse3_edx, 
-                        RMSE_validation = rmse3_val)
+                        RMSE_validation = " ")
 
 # Add results - movie w/regularization
 rmse_results <- add_row(rmse_results, 
                         method = "Movie w/ regularization", 
                         RMSE_edx = reg1_rmse_edx, 
-                        RMSE_validation = reg1_rmse_val)
+                        RMSE_validation = " ")
 
 # Add results - movie + user w/regularization
 rmse_results <- add_row(rmse_results, 

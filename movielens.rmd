@@ -403,93 +403,18 @@ reg2_rmse_edx <- min(reg2_rmse_edx)
 With both user and movie effect regularized, the RMSE is reduced to `r reg2_rmse_edx` on the test set.
 
 ## 4. Modeling and RMSE - final run
-This chapter desribes the modeling work I did with the edx and validation datasets that the course instructors provided the code to develop. The metodology and code is simlar to chapter 3, but I use the final datasets in this chapter. Please note that the validation dataset is only used for reporting the final RMSE value.  
-Similar to chapter 3, I started out using the avergage rating as a predictor:
+This chapter desribes the modeling work I did with the edx and validation datasets that the course instructors provided the code to develop. The metodology and code is simlar to chapter 3, but I use the final datasets in this chapter. Please note that the validation dataset is only used for reporting the final model and final RMSE value.  
+Here is the code for applying the code for the final model - "Movie + user with regularization" - to the validation data set.  
+
 
 ```{r just_the_average}
 # Calculate the average rating for all movies in the train set
 mu_val <- mean(edx$rating) 
 
-## Run on validation set
-rmse1_val <- RMSE(validation$rating, mu_val)
-```
-The result is `r rmse1_val` which is very close to the RMSE from the training set at `r rmse1_edx`.   
-Let us include the movie effects:
-```{r movie_val}
-### Include Movie effects
-# We know there is high variability between movies
-# 
-
-## Validation set
-mu_val <- mean(edx$rating) 
-avgs_movie_val <- edx %>% 
-  group_by(movieId) %>% 
-  summarize(b_i = mean(rating - mu_val))
-
-pred_movie <- validation %>% 
-  left_join(avgs_movie_val, by='movieId') %>%
-  mutate(movie_pred = mu_val + b_i) %>%
-  pull(movie_pred)
-
-rmse2_val <- RMSE(validation$rating, pred_movie)
-```
-
-And let us include the movie and user effects:
-```{r user_val}
-### Add user effects
-# We know there is high variability between movies
-# 
-
-## Validation data set
-mu_val <- mean(edx$rating)
-avgs_user_val <- edx %>% 
-  left_join(avgs_movie_val, by='movieId') %>%
-  group_by(userId) %>%
-  summarize(b_u = mean(rating - mu_val - b_i))
-
-pred_user <- validation %>% 
-  left_join(avgs_movie_val, by='movieId') %>%
-  left_join(avgs_user_val, by='userId') %>%
-  mutate(pred = mu_val + b_i + b_u) %>%
-  pull(pred)
-
-# calculate RMSE
-rmse3_val <- RMSE(validation$rating, pred_user)
-```
-
-We're now down to an RMSE of `r rmse3_val`. Can the RMSE become lower with regularization? Let us try - first with movie effect only: 
-```{r reg_movie_val}
-#### Include regularization - movie effects
-### Validation set
-
 # Lambdas table
 lambdas <- seq(0, 8, 0.1)
-# Use sapply to calculate RMSE with various Lambdas
-reg1_rmse_val <- sapply(lambdas, function(lambda) {
-  
-  # Calculate the average per movie
-  b_i <- edx %>%
-    group_by(movieId) %>%
-    summarize(b_i = sum(rating - mu_val) / (n() + lambda))
-  
-  # Predict rating and apply to validation set
-  predicted_ratings <- validation %>%
-    left_join(b_i, by='movieId') %>%
-    mutate(pred = mu_val + b_i) %>%
-    pull(pred)
-  
-  # Predict the RMSE on the validation set
-  return(RMSE(validation$rating, predicted_ratings))
-})
 
-# Predict the RMSE on the validation set
-reg1_rmse_val <- min(reg1_rmse_val)
-```
-
-The results is an RMSE of `r reg1_rmse_val`. Let us try a model where both the movie and user effect is regularized:
-```{r reg_movie_user_val}
-#### Regularization with movie and user effects
-### Validation set
+#### Regularization with movie and user effects - Validation set
 
 # Compute the predicted ratings on validation dataset using different values of lambda
 reg2_rmse_val <- sapply(lambdas, function(lambda) {
@@ -521,36 +446,38 @@ And the RMSE is `r reg2_rmse_val`.
 
 
 ## 5. RMSE comparison table and conclusion
+### RMSE table {.css_class}
 
-The table below summarizes the RMSE results from the various models applied to the edx test set that I made and the validation datatset that was provided by the course instructors.
+The table below summarizes the RMSE results from the various models applied to the edx test set that I made. Also, the table include the RMSE result from running the final model on the validation datatset that was provided by the course instructors.  
+
 ```{r table, include=FALSE}
 # Add results - just the average
 rm(rmse_results)
-rmse_results <- tibble(Method = "Just the average", 
+rmse_results <- tibble(method = "Just the average", 
                        RMSE_edx = rmse1_edx, 
-                       RMSE_validation = rmse1_val)
+                       RMSE_validation = " ")
 
 # Add results - movie effect
 rmse_results <- add_row(rmse_results, 
-                        Method = "Movie effect", 
+                        method = "Movie effect", 
                         RMSE_edx = rmse2_edx, 
-                        RMSE_validation = rmse2_val)
+                        RMSE_validation = " ")
 
 # Add results - movie + user effects
 rmse_results <- add_row(rmse_results, 
-                        Method = "User effect", 
+                        method = "User effect", 
                         RMSE_edx = rmse3_edx, 
-                        RMSE_validation = rmse3_val)
+                        RMSE_validation = " ")
 
 # Add results - movie w/regularization
 rmse_results <- add_row(rmse_results, 
-                        Method = "Movie w/ regularization", 
+                        method = "Movie w/ regularization", 
                         RMSE_edx = reg1_rmse_edx, 
-                        RMSE_validation = reg1_rmse_val)
+                        RMSE_validation = " ")
 
 # Add results - movie + user w/regularization
 rmse_results <- add_row(rmse_results, 
-                        Method = "Movie + user w/ regularization", 
+                        method = "Movie + user w/ regularization", 
                         RMSE_edx = reg2_rmse_edx, 
                         RMSE_validation = reg2_rmse_val)
 ```
@@ -559,9 +486,11 @@ rmse_results <- add_row(rmse_results,
 kable(rmse_results, caption = "RMSE results")
 ```
 
-In conclusion, this report has described my work with the movie prediction model. I have documented how I wrangled the data, explored the data, and made models using both the edx dataset and also with the final validation set.  
+
+### Conclusion {.css_class}
+The report describes my work with the movie prediction model. I have documented how I wrangled the data, explored the data, made different models using the edx dataset, and also how I applied the final model to the validation set.  
 But is the project objective - to develop a model for high-quality move predictions - met? In my view, no. The final model has an RMSE of less than 0.86490 which is good enough to qualify for best grade according to the MovieLens grading rubric. But I would personally be disappointed with a prediction service that was on average almost 0.9 stars off.  
-The model inclusion of other variables in the dataset, such as genre and time of rating, could reduce the RMSE slightly. But in order to make signifiant model improvements I think it is necessary to have a wider dataset with more information about the movies and users. For example, I really like the actor Matthew McConaughey, movies from the interwar period, and movies about France. Oh - and I normally enjoy movies more in the movie theater than at home. This is information that would help improve the prediction for my personal movie ratings, but it is also information that is not available in the MovieLens dataset and that limits the analysis.  
+Using other variables in the dataset, such as genre and time of rating, could reduce the RMSE slightly. But in order to make signifiant model improvements I think it is necessary to have a wider dataset with more information about the movies and users. For example, I really like the actor Matthew McConaughey, movies from the interwar period, and movies about France. Oh - and I normally enjoy movies more in the movie theater than at home. This is information that would help improve the prediction for my personal movie ratings, but it is also information that is not available in the MovieLens dataset and that limits the analysis.  
 For future work, it would be valuable to include more independent variables in the analysis. Also, it would be interesting to see whether other modeling methods - such as those found in R's Caret package, could improve the model quality. In the next project, the "Choose your own" project, I will use the Caret package to compare different modeling techniques.
 
 
